@@ -1,74 +1,58 @@
-# Harf Windows helper — preview source
+# Harf — Go Windows helper
 
-This is original source code. The preview has compiled on a Windows CI runner
-and passed converter self-tests. Installers are published separately under
-GitHub Releases. Manual installation and keyboard-input validation are still
-pending; the preview is not a stable release. No executable is included in
-this source ZIP.
+The Windows application and self-installer are written in Go. Native Win32 controls,
+Go standard library only: no .NET, Electron, WebView, CGO or third-party libraries.
+Target: Windows 10/11 x64. Running the built app does not require Go to be installed.
 
-## Build on Windows 10 / 11
+## Build
 
-1. Extract this entire ZIP into one directory.
-2. Run `Build.cmd`, or run `powershell -NoProfile -File .\build.ps1`.
-3. The script compiles with the Windows .NET Framework compiler, runs converter
-   self-tests and creates `out/Harf.exe` and `out/Harf-Setup.exe`.
-4. Test `out/Harf.exe` first. Build success alone does not verify keyboard input.
-5. `Harf-Setup.exe` copies the application into `%LOCALAPPDATA%\Harf`, adds a
-   Start Menu shortcut and starts it. No administrator access is requested.
-   Close an existing Harf instance before installing an update.
+Install Go and run `Build.cmd`, or `powershell -File build.ps1` in this directory.
+The script runs Go tests and vet, then creates `out/Harf.exe` and `out/Harf-Setup.exe`.
+They contain the same Go binary; the filename selects installation mode.
 
-The .NET Framework 4.8 compiler is required; if absent, install its Developer Pack.
-`Build.cmd` uses a process-scoped PowerShell execution policy and does not change
-your machine's persistent execution-policy setting.
+Cross-compile from Linux/macOS:
 
-## Controls
+```sh
+cd desktop
+go test ./...
+CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -trimpath -ldflags='-H=windowsgui -s -w' -o Harf.exe ./cmd/harf
+```
 
-- AltGr (or Ctrl+Alt) + O / G / S / C inserts ö / ğ / ş / ç.
-- Add Shift for uppercase. Caps Lock is not used by these shortcuts.
-- Ctrl+Alt+Y toggles automatic replacement, which starts OFF each session.
-- Automatic mode recognizes ASCII `sh`, `ch`, `o'`, `g'`, and backtick variants
-  on a US Latin physical layout. This is an input helper, NOT a registered
-  Windows keyboard layout. OS layout DLL installation is not implemented.
-- Tray menu: show window, toggle automatic replacement, exit.
-- Closing the window hides it to the tray; use Exit to stop it entirely.
-- Windows startup is opt-in through the checkbox.
-- The window includes forward/reverse offline text conversion and copy.
+CI checks the portable converter on Linux, conversion and Win32 memory layouts on
+Windows, and native window/hook registration with a bounded smoke test. Preview
+installers and SHA-256 hashes are published under GitHub Releases. Manual typing,
+installation and uninstallation tests are still needed before a stable release.
 
-The helper does not log, save or transmit keystrokes. The automatic mode keeps
-only the preceding candidate character in memory. Common code editors and
-terminals are excluded. Native password controls are excluded where detectable;
-browser password fields cannot be reliably identified, so keep automatic mode
-OFF while entering passwords. AltGr shortcuts remain active while Harf runs.
-Keyboard hooks and shortcut collisions can affect other applications; exit Harf
-to release all shortcuts. Input into elevated apps may be blocked by Windows.
+## Use
 
-Automatic replacement is intentionally a basic typing aid: unlike the full-text
-converter, it cannot identify URLs/emails/foreign-language words before you finish
-typing. Use the website or desktop text box when contextual preservation matters.
+- Harf-Setup.exe installs into `%LOCALAPPDATA%\Harf` for the current user.
+  Exit an older Harf instance before upgrading. No administrator access required.
+- Harf.exe runs directly without installation.
+- AltGr (Ctrl+Alt) + O/G/S/C inserts ö/ğ/ş/ç. Add Shift for uppercase.
+- Automatic replacement starts OFF. Toggle it in the window/tray or Ctrl+Alt+Y.
+- Automatic mode recognizes sh, ch, o', g' and backtick variants, and only runs
+  with the English US keyboard layout to avoid incorrect physical-key mappings.
+- Closing the window hides it to the tray. Use Exit to stop it.
+- Windows startup is opt-in; only the current user's Harf Run registry entry is used.
+- The window includes an offline forward/reverse converter and clipboard copy.
+
+This background helper does not install an OS keyboard-layout DLL. It keeps only
+the preceding candidate rune in memory and does not save or transmit keystrokes.
+Common editors/terminals and detectable native password controls are excluded.
+Browser password fields cannot be identified reliably: keep auto mode OFF while
+entering passwords. Elevated apps can refuse input injection. Exit Harf to release
+all registered shortcuts. Automatic replacement cannot protect unfinished URLs,
+emails or foreign words in advance; use the full-text converter for those.
 
 ## Uninstall
 
-Exit Harf from the tray menu. Run `%LOCALAPPDATA%\Harf\Uninstall.cmd`.
-It removes the startup entry, Start Menu shortcut and application directory.
-The helper does not modify system keyboard layouts.
+Exit Harf and run `%LOCALAPPDATA%\Harf\Uninstall.cmd`. It removes the application,
+Start Menu shortcut and current user's Harf startup entry.
 
-## Required Windows acceptance checks before a release
+## Manual Windows acceptance checks
 
-- Run conversion self-tests through `build.ps1`.
-- Notepad: AltGr letter insertion, Shift uppercase, automatic digraphs,
-  mixed case, rapid typing, Backspace, mouse clicks, navigation and focus changes.
-- Confirm Ctrl+Alt+Y, Caps Lock, held keys, tray exit and duplicate-instance handling.
-- Confirm shortcuts do not type into a newly focused window after activation.
-- Verify automatic mode is off at startup and disabled in excluded applications.
-- Check password-control exclusions and document the browser limitation.
-- Install on a clean standard-user account; test Start Menu launch, opt-in startup,
-  update after exit, uninstall, 32-bit/64-bit behavior and input restrictions.
-- Test with a screen reader and a non-US current keyboard layout.
-- Review hook latency and antivirus results; sign release binaries when possible.
-
-## Website download integration
-
-After Windows validation, publish `Harf-Setup.exe` and its SHA-256 hash in your own
-GitHub Release. Replace the source-package link in the website with the actual
-release download URL and update the Windows section/FAQ to match tested behavior.
-Never link the sample project's installer as though it were a Harf release.
+Test installation, Start Menu launch, startup, upgrade and uninstall on a clean
+standard-user account. Test all AltGr/Shift shortcuts, rapid typing, focus changes,
+mouse clicks, Caps Lock, Backspace, auto-mode toggling, clipboard, excluded/elevated
+apps, tray exit and duplicate-instance handling. Check the documented browser
+password-field limitation. CI smoke testing does not cover every interaction.

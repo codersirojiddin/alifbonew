@@ -11,7 +11,19 @@ on:
 permissions:
   contents: read
 jobs:
+  portable-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+          cache: false
+      - name: Test Go converter on Linux
+        working-directory: desktop
+        run: go test ./...
   build:
+    needs: portable-tests
     runs-on: windows-latest
     timeout-minutes: 10
     permissions:
@@ -21,11 +33,24 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+          cache: false
+      - name: Format Go source
+        shell: bash
+        run: gofmt -w desktop/cmd desktop/internal
       - name: Check browser converter
         run: node tests/converter.test.cjs
-      - name: Compile and test Windows converter
+      - name: Compile and test Go Windows application
         shell: powershell
         run: .\desktop\build.ps1
+      - name: Native window and input hook smoke test
+        shell: powershell
+        run: |
+          $app = Start-Process desktop/out/Harf.exe -ArgumentList "--smoke-test" -PassThru
+          if (!$app.WaitForExit(20000)) { $app.Kill(); throw "Go native smoke test timed out." }
+          if ($app.ExitCode -ne 0) { throw "Go native smoke test failed: $($app.ExitCode)" }
       - name: Write checksums
         shell: powershell
         run: |
@@ -44,6 +69,6 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-          RELEASE_TAG: v0.1.0-preview.${{ github.run_number }}
+          RELEASE_TAG: v0.2.0-go-preview.${{ github.run_number }}
         run: |
-          gh release create "$RELEASE_TAG" desktop/out/Harf.exe desktop/out/Harf-Setup.exe desktop/out/SHA256SUMS.txt --target "$GITHUB_SHA" --prerelease --title "Harf Windows preview ${{ github.run_number }}" --notes-file .github/preview-notes.md
+          gh release create "$RELEASE_TAG" desktop/out/Harf.exe desktop/out/Harf-Setup.exe desktop/out/SHA256SUMS.txt --target "$GITHUB_SHA" --prerelease --title "Harf Go Windows preview ${{ github.run_number }}" --notes-file .github/preview-notes.md

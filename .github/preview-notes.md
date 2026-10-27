@@ -1,21 +1,18 @@
-Harf Windows input helper — preview build.
+Harf 0.2 — rewritten in **Go**, using native Windows controls.
+No .NET, Electron, WebView, CGO or third-party runtime required.
 
-- **Harf-Setup.exe** installs for your Windows user. No administrator rights required.
-- **Harf.exe** runs without installation.
-- Windows 10/11 with .NET Framework 4.8 required.
-- AltGr + O/G/S/C inserts ö/ğ/ş/ç. Add Shift for uppercase.
-- Automatic replacement is opt-in. Toggle it in the app or with Ctrl+Alt+Y.
-- Website-style forward/reverse conversion is available in the app window.
-- Startup is opt-in; closing the window hides it to the tray. Use Exit to stop it.
-- To uninstall, exit Harf and run `%LOCALAPPDATA%\Harf\Uninstall.cmd`.
+- Harf-Setup.exe installs for the current Windows user; Harf.exe runs directly.
+- Windows 10/11 x64. Exit the older Harf before upgrading.
+- AltGr + O/G/S/C → ö/ğ/ş/ç; add Shift for uppercase.
+- Ctrl+Alt+Y toggles automatic replacement (OFF at startup).
+- Startup is opt-in. Closing hides to tray; Exit stops the app.
+- Includes offline text conversion and clipboard copy.
+- Uninstall: exit Harf and run `%LOCALAPPDATA%\Harf\Uninstall.cmd`.
 
-This build is unsigned. CI compiles the application and checks its converter;
-that does not replace manual testing of typing, installation and uninstallation
-on a Windows PC. This helper does not install an OS keyboard-layout DLL.
+CI checks Go conversion on Linux/Windows, Win32 memory layouts and native
+window/input-hook registration. Manual typing/install/uninstall checks remain
+necessary before a stable release. Preview binaries are unsigned; compare SHA-256.
 
-Automatic replacement assumes a US Latin layout. It cannot reliably identify
-browser password fields; keep automatic mode off while entering sensitive data.
-Common editors and terminals are excluded from automatic replacement.
-
-Compare the downloaded files against SHA256SUMS.txt. Report problems in this
-repository with the app version, Windows version and steps to reproduce.
+Auto mode uses English US only and cannot identify all browser password fields
+or unfinished URLs. Keep it OFF for sensitive input. The helper does not install
+an OS keyboard-layout DLL.
