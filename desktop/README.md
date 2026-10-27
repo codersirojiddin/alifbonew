@@ -1,8 +1,10 @@
 # Harf Windows helper — preview source
 
-This is original source code, not a compiled or Windows-tested release.
-No executable is included in this source ZIP. The website must not advertise
-an available .exe until the Windows validation below is complete.
+This is original source code. The preview has compiled on a Windows CI runner
+and passed converter self-tests. Installers are published separately under
+GitHub Releases. Manual installation and keyboard-input validation are still
+pending; the preview is not a stable release. No executable is included in
+this source ZIP.
 
 ## Build on Windows 10 / 11
 
